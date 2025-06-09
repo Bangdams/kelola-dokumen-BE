@@ -1,0 +1,68 @@
+@startuml kelolaDokumen
+  entity users {
+    * ID : number <PR>
+    --
+    * username : text
+    * name : text
+    * password : text
+    * role : enum('admin', 'user')
+    * created_at : timestamp
+    * updated_at : timestamp
+  }
+
+  entity rw_lists {
+    * ID : number <PR>
+    --
+    * user_id: number <FR>
+    * name_rw : string
+    * created_at : timestamp
+    * updated_at : timestamp
+  }
+
+  entity mails{
+    * ID : number <PR>
+    --
+    * statement_type_item_id: number <PR>
+    * user_id: number <PR>
+    * ktp_file_path : string
+    * kk_file_path : string
+    * rt_rw_file_path : string
+    * created_at : timestamp
+    * updated_at : timestamp
+  }
+
+  entity statement_types{
+    * ID : number <PR>
+    --
+    * name : text
+    * created_at : timestamp
+    * updated_at : timestamp
+  }
+
+  entity statement_type_items{
+    * ID : number <PR>
+    --
+    * statement_type_id: number <FR>
+    * name : text
+    * created_at : timestamp
+    * updated_at : timestamp
+  }
+
+  entity refresh_tokens{
+    * user_id : number <PR><FR>
+    * token : text
+    * status_logout : number
+    * expires_at : timestamp
+    * created_at : timestamp
+  }
+
+  ' relasi
+  users ||--o| rw_list
+  users ||--o{ mails
+  statement_types ||--o{ statement_type_items
+  statement_type_items ||--o{ mails
+  users ||--|| refresh_tokens
+
+
+@enduml
+

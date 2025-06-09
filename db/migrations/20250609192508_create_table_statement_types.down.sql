@@ -1,0 +1,7 @@
+SET
+  FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS statement_types;
+
+SET
+  FOREIGN_KEY_CHECKS = 1;
