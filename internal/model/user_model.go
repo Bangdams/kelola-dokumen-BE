@@ -16,6 +16,7 @@ type UserRequest struct {
 	Name     string `json:"name" validate:"required"`
 	Password string `json:"password" validate:"required"`
 	Role     string `json:"role" validate:"required"`
+	RwListRequest
 }
 
 type UpdateUserPasswordRequest struct {
@@ -27,6 +28,7 @@ type UpdateUserRequest struct {
 	Username string `json:"username" validate:"required"`
 	Name     string `json:"name" validate:"required"`
 	Password string `json:"password"`
+	RwListUpdateRequest
 }
 
 type LoginRequest struct {

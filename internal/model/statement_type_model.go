@@ -8,3 +8,8 @@ type StatementTypeResponse struct {
 type StatementTypeRequest struct {
 	Name string `json:"name" validate:"required"`
 }
+
+type UpdateStatementTypeRequest struct {
+	ID   uint   `json:"id" validate:"required"`
+	Name string `json:"name" validate:"required"`
+}
