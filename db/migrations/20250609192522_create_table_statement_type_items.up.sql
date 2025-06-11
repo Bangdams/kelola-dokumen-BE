@@ -1,9 +1,10 @@
 CREATE TABLE statement_type_items (
   id INT NOT NULL AUTO_INCREMENT,
   statement_type_id INT NOT NULL,
-  name VARCHAR(100) NOT NULL UNIQUE,
+  name VARCHAR(100) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  FOREIGN KEY (statement_type_id) REFERENCES statement_types(id) ON DELETE CASCADE
+  FOREIGN KEY (statement_type_id) REFERENCES statement_types(id) ON DELETE CASCADE,
+  UNIQUE (statement_type_id, name)
 ) ENGINE = InnoDB;

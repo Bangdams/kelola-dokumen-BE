@@ -1,0 +1,7 @@
+SET
+  FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS death_certificate_documents;
+
+SET
+  FOREIGN_KEY_CHECKS = 1;
