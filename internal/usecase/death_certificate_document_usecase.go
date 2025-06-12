@@ -21,6 +21,7 @@ type DeathCertificateDocumentUsecase interface {
 	Delete(ctx context.Context, deathDocumentId uint) error
 	FindById(ctx context.Context, deathDocumentId uint) (*model.DeathCertificateDocumentResponse, error)
 	FindAll(ctx context.Context) (*[]model.DeathCertificateDocumentResponse, error)
+	Update(ctx context.Context, deathDocumentId uint, suratBalasan string) (*model.DeathCertificateDocumentResponse, error)
 }
 
 type DeathCertificateDocumentUsecaseImpl struct {
@@ -37,6 +38,52 @@ func NewDeathCertificateDocumentUsecase(statementTypeItemRepo repository.Stateme
 		DB:                           DB,
 		Validate:                     validate,
 	}
+}
+
+// Update implements DeathCertificateDocumentUsecase.
+func (deathDocumentUsecase *DeathCertificateDocumentUsecaseImpl) Update(ctx context.Context, deathDocumentId uint, suratBalasan string) (*model.DeathCertificateDocumentResponse, error) {
+	tx := deathDocumentUsecase.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	errorResponse := &model.ErrorResponse{}
+
+	deathDocument := &entity.DeathCertificateDocument{
+		ID: deathDocumentId,
+	}
+
+	err := deathDocumentUsecase.DeathCertificateDocumentRepo.FindById(tx, deathDocument)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			errorResponse.Message = "statement type item data was not found"
+			errorResponse.Details = []string{}
+
+			jsonString, _ := json.Marshal(errorResponse)
+			log.Println("Data not found")
+
+			return nil, fiber.NewError(fiber.ErrNotFound.Code, string(jsonString))
+		}
+
+		log.Println("error find by id : ", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	deathDocument.Status = "selesai"
+	deathDocument.SuratBalasanFilePath = suratBalasan
+
+	err = deathDocumentUsecase.DeathCertificateDocumentRepo.Update(tx, deathDocument)
+	if err != nil {
+		log.Println("Failed to update : ", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		log.Println("Failed commit transaction : ", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	log.Println("success update from usecase deathDocument")
+
+	return converter.DeathCertificateDocumentToResponse(deathDocument), nil
 }
 
 // Create implements DeathCertificateDocumentUsecase.
@@ -119,30 +166,30 @@ func (deathDocumentUsecase *DeathCertificateDocumentUsecaseImpl) Delete(ctx cont
 	tx := deathDocumentUsecase.DB.WithContext(ctx).Begin()
 	defer tx.Rollback()
 
-	birthDocument := &entity.DeathCertificateDocument{}
-	birthDocument.ID = deathDocumentId
+	deathDocument := &entity.DeathCertificateDocument{}
+	deathDocument.ID = deathDocumentId
 
-	err := deathDocumentUsecase.DeathCertificateDocumentRepo.FindById(tx, birthDocument)
+	err := deathDocumentUsecase.DeathCertificateDocumentRepo.FindById(tx, deathDocument)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			errorResponse := model.ErrorResponse{
-				Message: "birthDocument data was not found",
+				Message: "deathDocument data was not found",
 				Details: []string{},
 			}
 			jsonString, _ := json.Marshal(errorResponse)
 
-			log.Println("error birthDocument : ", err)
+			log.Println("error deathDocument : ", err)
 
 			return fiber.NewError(fiber.ErrNotFound.Code, string(jsonString))
 		}
 
-		log.Println("error birthDocument : ", err)
+		log.Println("error deathDocument : ", err)
 		return fiber.ErrInternalServerError
 	}
 
-	err = deathDocumentUsecase.DeathCertificateDocumentRepo.Delete(tx, birthDocument)
+	err = deathDocumentUsecase.DeathCertificateDocumentRepo.Delete(tx, deathDocument)
 	if err != nil {
-		log.Println("failed when delete repo birthDocument : ", err)
+		log.Println("failed when delete repo deathDocument : ", err)
 		return fiber.ErrInternalServerError
 	}
 
@@ -151,7 +198,7 @@ func (deathDocumentUsecase *DeathCertificateDocumentUsecaseImpl) Delete(ctx cont
 		return fiber.ErrInternalServerError
 	}
 
-	log.Println("success delete from usecase birthDocument")
+	log.Println("success delete from usecase deathDocument")
 
 	return nil
 }
@@ -161,10 +208,10 @@ func (deathDocumentUsecase *DeathCertificateDocumentUsecaseImpl) FindAll(ctx con
 	tx := deathDocumentUsecase.DB.WithContext(ctx).Begin()
 	defer tx.Rollback()
 
-	var birthDocuments = &[]entity.DeathCertificateDocument{}
-	err := deathDocumentUsecase.DeathCertificateDocumentRepo.FindAll(tx, birthDocuments)
+	var deathDocuments = &[]entity.DeathCertificateDocument{}
+	err := deathDocumentUsecase.DeathCertificateDocumentRepo.FindAll(tx, deathDocuments)
 	if err != nil {
-		log.Println("failed when find all repo birthDocument : ", err)
+		log.Println("failed when find all repo deathDocument : ", err)
 		return nil, fiber.ErrInternalServerError
 	}
 
@@ -173,9 +220,9 @@ func (deathDocumentUsecase *DeathCertificateDocumentUsecaseImpl) FindAll(ctx con
 		return nil, fiber.ErrInternalServerError
 	}
 
-	log.Println("success find all from usecase birthDocument")
+	log.Println("success find all from usecase deathDocument")
 
-	return converter.DeathCertificateDocumentToResponses(birthDocuments), nil
+	return converter.DeathCertificateDocumentToResponses(deathDocuments), nil
 }
 
 // FindById implements DeathCertificateDocumentUsecase.
@@ -183,13 +230,13 @@ func (deathDocumentUsecase *DeathCertificateDocumentUsecaseImpl) FindById(ctx co
 	tx := deathDocumentUsecase.DB.WithContext(ctx).Begin()
 	defer tx.Rollback()
 
-	birthDocument := new(entity.DeathCertificateDocument)
-	birthDocument.ID = deathDocumentId
+	deathDocument := new(entity.DeathCertificateDocument)
+	deathDocument.ID = deathDocumentId
 
-	if err := deathDocumentUsecase.DeathCertificateDocumentRepo.FindById(tx, birthDocument); err != nil {
+	if err := deathDocumentUsecase.DeathCertificateDocumentRepo.FindById(tx, deathDocument); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			errorResponse := model.ErrorResponse{
-				Message: "birthDocument data was not found",
+				Message: "deathDocument data was not found",
 				Details: []string{},
 			}
 
@@ -209,7 +256,7 @@ func (deathDocumentUsecase *DeathCertificateDocumentUsecaseImpl) FindById(ctx co
 		return nil, fiber.ErrInternalServerError
 	}
 
-	log.Println("success find by id from usecase birthDocument")
+	log.Println("success find by id from usecase deathDocument")
 
-	return converter.DeathCertificateDocumentToResponse(birthDocument), nil
+	return converter.DeathCertificateDocumentToResponse(deathDocument), nil
 }

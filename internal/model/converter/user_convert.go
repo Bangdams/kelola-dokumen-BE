@@ -15,6 +15,7 @@ func UserToResponse(user *entity.User) *model.UserResponse {
 		Username: user.Username,
 		Name:     user.Name,
 		Role:     user.Role,
+		NameRw:   user.RwList.NameRw,
 	}
 }
 

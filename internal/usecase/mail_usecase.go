@@ -19,8 +19,11 @@ import (
 type MailUsecase interface {
 	Create(ctx context.Context, request *model.MailRequest) (*model.MailResponse, error)
 	Delete(ctx context.Context, mailId uint) error
+	Update(ctx context.Context, mailId uint, suratBalasan string) (*model.MailResponse, error)
 	FindById(ctx context.Context, mailId uint) (*model.MailResponse, error)
 	FindAll(ctx context.Context) (*[]model.MailResponse, error)
+	FindAllIncompliteMail(ctx context.Context) (*model.AllMailResponse, error)
+	FindAllCompliteMail(ctx context.Context) (*model.AllMailResponse, error)
 }
 
 type MailUsecaseImpl struct {
@@ -37,6 +40,96 @@ func NewMailUsecase(statementTypeItemRepo repository.StatementTypeItemRepository
 		DB:                    DB,
 		Validate:              validate,
 	}
+}
+
+// FindAllCompliteMail implements MailUsecase.
+func (mailUsecase *MailUsecaseImpl) FindAllCompliteMail(ctx context.Context) (*model.AllMailResponse, error) {
+	tx := mailUsecase.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	response := &model.AllMailResponse{}
+	err := mailUsecase.MailRepo.FindAllCompliteMail(tx, response)
+	if err != nil {
+		log.Println("Failed to find : ", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		log.Println("Failed commit transaction : ", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	log.Println("success find from usecase mail")
+
+	return response, nil
+}
+
+// FindAllIncompliteMail implements MailUsecase.
+func (mailUsecase *MailUsecaseImpl) FindAllIncompliteMail(ctx context.Context) (*model.AllMailResponse, error) {
+	tx := mailUsecase.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	response := &model.AllMailResponse{}
+	err := mailUsecase.MailRepo.FindAllIncompliteMail(tx, response)
+	if err != nil {
+		log.Println("Failed to find : ", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		log.Println("Failed commit transaction : ", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	log.Println("success find from usecase mail")
+
+	return response, nil
+}
+
+// Update implements MailUsecase.
+func (mailUsecase *MailUsecaseImpl) Update(ctx context.Context, mailId uint, suratBalasan string) (*model.MailResponse, error) {
+	tx := mailUsecase.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	errorResponse := &model.ErrorResponse{}
+
+	mail := &entity.Mail{
+		ID: mailId,
+	}
+
+	err := mailUsecase.MailRepo.FindById(tx, mail)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			errorResponse.Message = "statement type item data was not found"
+			errorResponse.Details = []string{}
+
+			jsonString, _ := json.Marshal(errorResponse)
+			log.Println("Data not found")
+
+			return nil, fiber.NewError(fiber.ErrNotFound.Code, string(jsonString))
+		}
+
+		log.Println("error find by id : ", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	mail.Status = "selesai"
+	mail.SuratBalasanFilePath = suratBalasan
+
+	err = mailUsecase.MailRepo.Update(tx, mail)
+	if err != nil {
+		log.Println("Failed to update : ", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		log.Println("Failed commit transaction : ", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	log.Println("success update from usecase mail")
+
+	return converter.MailToResponse(mail), nil
 }
 
 // FindAll implements UserUsecase.

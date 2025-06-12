@@ -21,6 +21,7 @@ type UserController interface {
 	Login(ctx *fiber.Ctx) error
 	Logout(ctx *fiber.Ctx) error
 	Refresh(ctx *fiber.Ctx) error
+	DashboardAdmin(ctx *fiber.Ctx) error
 }
 
 type UserControllerImpl struct {
@@ -31,6 +32,17 @@ func NewUserController(userUsecase usecase.UserUsecase) UserController {
 	return &UserControllerImpl{
 		UserUsecase: userUsecase,
 	}
+}
+
+// DashboardAdmin implements UserController.
+func (controller *UserControllerImpl) DashboardAdmin(ctx *fiber.Ctx) error {
+	response, err := controller.UserUsecase.DashboardAdmin(ctx.UserContext())
+	if err != nil {
+		log.Println("failed to show dashboard admin")
+		return err
+	}
+
+	return ctx.JSON(model.WebResponse[*model.DashboardAdminResponse]{Data: response})
 }
 
 // FindId implements UserController.

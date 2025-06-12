@@ -21,6 +21,7 @@ type MarriageStatementDocumentUsecase interface {
 	Delete(ctx context.Context, marriageDocumentId uint) error
 	FindById(ctx context.Context, marriageDocumentId uint) (*model.MarriageStatementDocumentResponse, error)
 	FindAll(ctx context.Context) (*[]model.MarriageStatementDocumentResponse, error)
+	Update(ctx context.Context, marriageDocumentId uint, suratBalasan string) (*model.MarriageStatementDocumentResponse, error)
 }
 
 type MarriageStatementDocumentUsecaseImpl struct {
@@ -37,6 +38,52 @@ func NewMarriageStatementDocumentUsecase(statementTypeItemRepo repository.Statem
 		DB:                            DB,
 		Validate:                      validate,
 	}
+}
+
+// Update implements MarriageStatementDocumentUsecase.
+func (marriageDocumentUsecase *MarriageStatementDocumentUsecaseImpl) Update(ctx context.Context, marriageDocumentId uint, suratBalasan string) (*model.MarriageStatementDocumentResponse, error) {
+	tx := marriageDocumentUsecase.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	errorResponse := &model.ErrorResponse{}
+
+	marriageDocument := &entity.MarriageStatementDocument{
+		ID: marriageDocumentId,
+	}
+
+	err := marriageDocumentUsecase.MarriageStatementDocumentRepo.FindById(tx, marriageDocument)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			errorResponse.Message = "statement type item data was not found"
+			errorResponse.Details = []string{}
+
+			jsonString, _ := json.Marshal(errorResponse)
+			log.Println("Data not found")
+
+			return nil, fiber.NewError(fiber.ErrNotFound.Code, string(jsonString))
+		}
+
+		log.Println("error find by id : ", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	marriageDocument.Status = "selesai"
+	marriageDocument.SuratBalasanFilePath = suratBalasan
+
+	err = marriageDocumentUsecase.MarriageStatementDocumentRepo.Update(tx, marriageDocument)
+	if err != nil {
+		log.Println("Failed to update : ", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		log.Println("Failed commit transaction : ", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	log.Println("success update from usecase marriageDocument")
+
+	return converter.MarriageStatementDocumentToResponse(marriageDocument), nil
 }
 
 // Create implements MarriageStatementDocumentUsecase.

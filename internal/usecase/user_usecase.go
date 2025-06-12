@@ -32,6 +32,7 @@ type UserUsecase interface {
 	Login(ctx context.Context, request *model.LoginRequest, requestRefreshToken string) (*model.LoginResponse, string, error)
 	Logout(ctx context.Context, refreshToken string) error
 	Refresh(ctx context.Context, refreshToken string) (*model.LoginResponse, error)
+	DashboardAdmin(ctx context.Context) (*model.DashboardAdminResponse, error)
 }
 
 type UserUsecaseImpl struct {
@@ -50,6 +51,34 @@ func NewUserUsecase(userRepo repository.UserRepository, refreshTokenRepo reposit
 		DB:               DB,
 		Validate:         validate,
 	}
+}
+
+// DashboardAdmin implements UserUsecase.
+func (userUsecase *UserUsecaseImpl) DashboardAdmin(ctx context.Context) (*model.DashboardAdminResponse, error) {
+	tx := userUsecase.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	var totalCompleted int64
+	var totalIncompleted int64
+	err := userUsecase.UserRepo.DashboardAdmin(tx, &totalCompleted, &totalIncompleted)
+	if err != nil {
+		log.Println("Failed commit transaction : ", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		log.Println("Failed commit transaction : ", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	log.Println("success dashboard admin from usecase user")
+
+	response := model.DashboardAdminResponse{
+		TotalCompleted:  totalCompleted,
+		TotalIncomplete: totalIncompleted,
+	}
+
+	return &response, nil
 }
 
 // FindById implements UserUsecase.
@@ -399,7 +428,6 @@ func (userUsecase *UserUsecaseImpl) Create(ctx context.Context, request *model.U
 
 			return nil, fiber.NewError(fiber.ErrBadRequest.Code, string(jsonString))
 		}
-
 		rwList := &entity.RwList{
 			NameRw: request.NameRw,
 		}

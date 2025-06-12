@@ -16,6 +16,9 @@ type MailController interface {
 	Delete(ctx *fiber.Ctx) error
 	FindAll(ctx *fiber.Ctx) error
 	FindId(ctx *fiber.Ctx) error
+	Update(ctx *fiber.Ctx) error
+	FindAllIncompliteMail(ctx *fiber.Ctx) error
+	FindAllCompliteMail(ctx *fiber.Ctx) error
 }
 
 type MailControllerImpl struct {
@@ -26,6 +29,76 @@ func NewMailController(mailUsecase usecase.MailUsecase) MailController {
 	return &MailControllerImpl{
 		MailUsecase: mailUsecase,
 	}
+}
+
+// FindAllCompliteMail implements MailController.
+func (controller *MailControllerImpl) FindAllCompliteMail(ctx *fiber.Ctx) error {
+	response, err := controller.MailUsecase.FindAllCompliteMail(ctx.UserContext())
+	if err != nil {
+		log.Println("failed to find mail")
+		return err
+	}
+
+	return ctx.JSON(model.WebResponse[*model.AllMailResponse]{Data: response})
+}
+
+// FindAllIncompliteMail implements MailController.
+func (controller *MailControllerImpl) FindAllIncompliteMail(ctx *fiber.Ctx) error {
+	response, err := controller.MailUsecase.FindAllIncompliteMail(ctx.UserContext())
+	if err != nil {
+		log.Println("failed to find mail")
+		return err
+	}
+
+	return ctx.JSON(model.WebResponse[*model.AllMailResponse]{Data: response})
+}
+
+// Update implements MailController.
+func (controller *MailControllerImpl) Update(ctx *fiber.Ctx) error {
+	request := new(model.BalasanRequest)
+	if err := ctx.BodyParser(request); err != nil {
+		log.Println("failed to parse request:", err)
+		return fiber.ErrBadRequest
+	}
+
+	mailId, err := strconv.Atoi(ctx.FormValue("id"))
+	if err != nil {
+		log.Println("error badrequest")
+		return fiber.ErrBadRequest
+	}
+
+	request.ID = uint(mailId)
+
+	fileFields := []string{"suratBalasan"}
+	savedFiles := make(map[string]string)
+
+	for _, field := range fileFields {
+		file, err := ctx.FormFile(field)
+		if err != nil {
+			log.Println("failed to parse", field, "file:", err)
+			return fiber.ErrBadRequest
+		}
+
+		filePath, err := util.SaveValidatedFile(ctx, file, field)
+		if err != nil {
+			log.Println("failed to save", field, "file:", err)
+
+			util.CleanupFiles(savedFiles)
+
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		}
+
+		savedFiles[field] = filePath
+	}
+	request.SuratBalasanFilePath = savedFiles["suratBalasan"]
+
+	response, err := controller.MailUsecase.Update(ctx.UserContext(), request.ID, request.SuratBalasanFilePath)
+	if err != nil {
+		log.Println("failed to update mail")
+		return err
+	}
+
+	return ctx.JSON(model.WebResponse[*model.MailResponse]{Data: response})
 }
 
 // Create implements MailController.

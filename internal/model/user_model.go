@@ -9,6 +9,12 @@ type UserResponse struct {
 	Username string `json:"username" validate:"required"`
 	Name     string `json:"name" validate:"required"`
 	Role     string `json:"role" validate:"required"`
+	NameRw   string `json:"name_rw"`
+}
+
+type DashboardAdminResponse struct {
+	TotalCompleted  int64 `json:"total_completed"`
+	TotalIncomplete int64 `json:"total_incomplete"`
 }
 
 type UserRequest struct {

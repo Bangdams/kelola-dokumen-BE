@@ -16,6 +16,7 @@ type BirthCertificateDocumentController interface {
 	Delete(ctx *fiber.Ctx) error
 	FindAll(ctx *fiber.Ctx) error
 	FindId(ctx *fiber.Ctx) error
+	Update(ctx *fiber.Ctx) error
 }
 
 type BirthCertificateDocumentControllerImpl struct {
@@ -26,6 +27,54 @@ func NewBirthCertificateDocumentController(birthCertificateDocumentUsecase useca
 	return &BirthCertificateDocumentControllerImpl{
 		BirthCertificateDocumentUsecase: birthCertificateDocumentUsecase,
 	}
+}
+
+// Update implements BirthCertificateDocumentController.
+func (controller *BirthCertificateDocumentControllerImpl) Update(ctx *fiber.Ctx) error {
+	request := new(model.BalasanRequest)
+	if err := ctx.BodyParser(request); err != nil {
+		log.Println("failed to parse request:", err)
+		return fiber.ErrBadRequest
+	}
+
+	birthDocumentId, err := strconv.Atoi(ctx.FormValue("id"))
+	if err != nil {
+		log.Println("error badrequest")
+		return fiber.ErrBadRequest
+	}
+
+	request.ID = uint(birthDocumentId)
+
+	fileFields := []string{"suratBalasan"}
+	savedFiles := make(map[string]string)
+
+	for _, field := range fileFields {
+		file, err := ctx.FormFile(field)
+		if err != nil {
+			log.Println("failed to parse", field, "file:", err)
+			return fiber.ErrBadRequest
+		}
+
+		filePath, err := util.SaveValidatedFile(ctx, file, field)
+		if err != nil {
+			log.Println("failed to save", field, "file:", err)
+
+			util.CleanupFiles(savedFiles)
+
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		}
+
+		savedFiles[field] = filePath
+	}
+	request.SuratBalasanFilePath = savedFiles["suratBalasan"]
+
+	response, err := controller.BirthCertificateDocumentUsecase.Update(ctx.UserContext(), request.ID, request.SuratBalasanFilePath)
+	if err != nil {
+		log.Println("failed to update mail")
+		return err
+	}
+
+	return ctx.JSON(model.WebResponse[*model.BirthCertificateDocumentResponse]{Data: response})
 }
 
 // Create implements BirthCertificateDocumentController.

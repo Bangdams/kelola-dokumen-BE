@@ -21,6 +21,7 @@ type BirthCertificateDocumentUsecase interface {
 	Delete(ctx context.Context, birthDocumentId uint) error
 	FindById(ctx context.Context, birthDocumentId uint) (*model.BirthCertificateDocumentResponse, error)
 	FindAll(ctx context.Context) (*[]model.BirthCertificateDocumentResponse, error)
+	Update(ctx context.Context, birthDocumentId uint, suratBalasan string) (*model.BirthCertificateDocumentResponse, error)
 }
 
 type BirthCertificateDocumentUsecaseImpl struct {
@@ -37,6 +38,52 @@ func NewBirthCertificateDocumentUsecase(statementTypeItemRepo repository.Stateme
 		DB:                           DB,
 		Validate:                     validate,
 	}
+}
+
+// Update implements BirthCertificateDocumentUsecase.
+func (birthDocumentUsecase *BirthCertificateDocumentUsecaseImpl) Update(ctx context.Context, birthDocumentId uint, suratBalasan string) (*model.BirthCertificateDocumentResponse, error) {
+	tx := birthDocumentUsecase.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	errorResponse := &model.ErrorResponse{}
+
+	birthDocument := &entity.BirthCertificateDocument{
+		ID: birthDocumentId,
+	}
+
+	err := birthDocumentUsecase.BirthCertificateDocumentRepo.FindById(tx, birthDocument)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			errorResponse.Message = "statement type item data was not found"
+			errorResponse.Details = []string{}
+
+			jsonString, _ := json.Marshal(errorResponse)
+			log.Println("Data not found")
+
+			return nil, fiber.NewError(fiber.ErrNotFound.Code, string(jsonString))
+		}
+
+		log.Println("error find by id : ", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	birthDocument.Status = "selesai"
+	birthDocument.SuratBalasanFilePath = suratBalasan
+
+	err = birthDocumentUsecase.BirthCertificateDocumentRepo.Update(tx, birthDocument)
+	if err != nil {
+		log.Println("Failed to update : ", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		log.Println("Failed commit transaction : ", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	log.Println("success update from usecase birthDocument")
+
+	return converter.BirthCertificateDocumentToResponse(birthDocument), nil
 }
 
 // Create implements BirthCertificateDocumentUsecase.
