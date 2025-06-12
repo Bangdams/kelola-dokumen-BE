@@ -7,6 +7,8 @@ CREATE TABLE marriage_statement_documents (
   ijazah_file_path VARCHAR(100) NOT NULL UNIQUE,
   akta_file_path VARCHAR(100) NOT NULL UNIQUE,
   ktp_saksi_file_path VARCHAR(100) NOT NULL UNIQUE,
+  surat_balasan_file_path VARCHAR(255) UNIQUE,
+  status ENUM("belum", "selesai") NOT NULL DEFAULT "belum",
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
