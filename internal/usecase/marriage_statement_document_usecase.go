@@ -139,6 +139,7 @@ func (marriageDocumentUsecase *MarriageStatementDocumentUsecaseImpl) Create(ctx 
 		IjazahFilePath:      request.IjazahFilePath,
 		AktaFilePath:        request.AktaFilePath,
 		KtpSaksiFilePath:    request.KtpSaksiFilePath,
+		Status:              "ditunggu",
 	}
 
 	err = marriageDocumentUsecase.MarriageStatementDocumentRepo.Create(tx, marriageDocument)

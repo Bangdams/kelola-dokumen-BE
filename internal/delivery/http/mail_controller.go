@@ -19,6 +19,7 @@ type MailController interface {
 	Update(ctx *fiber.Ctx) error
 	FindAllIncompliteMail(ctx *fiber.Ctx) error
 	FindAllCompliteMail(ctx *fiber.Ctx) error
+	FindAllMailForUser(ctx *fiber.Ctx) error
 }
 
 type MailControllerImpl struct {
@@ -29,6 +30,22 @@ func NewMailController(mailUsecase usecase.MailUsecase) MailController {
 	return &MailControllerImpl{
 		MailUsecase: mailUsecase,
 	}
+}
+
+// FindAllMailForUser implements MailController.
+func (controller *MailControllerImpl) FindAllMailForUser(ctx *fiber.Ctx) error {
+	userToken := ctx.Locals("user").(*jwt.Token)
+	claims := userToken.Claims.(jwt.MapClaims)
+	userId := claims["user_id"].(float64)
+
+	response, err := controller.MailUsecase.FindAllMailForUser(ctx.UserContext(), uint(userId))
+	if err != nil {
+		log.Println("failed to find mail")
+		return err
+	}
+
+	return ctx.JSON(model.WebResponses[model.AllMailItemForUserResponse]{Data: response})
+
 }
 
 // FindAllCompliteMail implements MailController.

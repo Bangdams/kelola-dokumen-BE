@@ -33,3 +33,54 @@ func MarriageStatementDocumentToResponses(marriageDocuments *[]entity.MarriageSt
 
 	return &marriageDocumentResponses
 }
+
+func MarriageDocumentsCompliteResponses(marriageDocumentsResponses *[]model.MarriageStatementDocumentWithUserResponse, marriageDocuments *[]entity.MarriageStatementDocument) {
+	for _, marriageDocument := range *marriageDocuments {
+		*marriageDocumentsResponses = append(*marriageDocumentsResponses, model.MarriageStatementDocumentWithUserResponse{
+			ID:                marriageDocument.ID,
+			StatementTypeItem: marriageDocument.StatementTypeItem.Name,
+			StatementType:     marriageDocument.StatementTypeItem.StatementType.Name,
+			Username:          marriageDocument.User.Username,
+			Name:              marriageDocument.User.Name,
+			KkFilePath:        marriageDocument.KkFilePath,
+			KtpFilePath:       marriageDocument.KtpFilePath,
+			IjazahFilePath:    marriageDocument.IjazahFilePath,
+			AktaFilePath:      marriageDocument.AktaFilePath,
+			KtpSaksiFilePath:  marriageDocument.KtpSaksiFilePath,
+			SuratBalasan:      marriageDocument.SuratBalasanFilePath,
+			RtRw:              marriageDocument.User.RwList.NameRw,
+		})
+	}
+
+}
+func MarriageDocumentsIncompliteResponses(marriageDocumentsResponses *[]model.MarriageStatementDocumentWithUserResponse, marriageDocuments *[]entity.MarriageStatementDocument) {
+	for _, marriageDocument := range *marriageDocuments {
+		*marriageDocumentsResponses = append(*marriageDocumentsResponses, model.MarriageStatementDocumentWithUserResponse{
+			ID:                marriageDocument.ID,
+			StatementTypeItem: marriageDocument.StatementTypeItem.Name,
+			StatementType:     marriageDocument.StatementTypeItem.StatementType.Name,
+			Username:          marriageDocument.User.Username,
+			Name:              marriageDocument.User.Name,
+			KkFilePath:        marriageDocument.KkFilePath,
+			KtpFilePath:       marriageDocument.KtpFilePath,
+			IjazahFilePath:    marriageDocument.IjazahFilePath,
+			AktaFilePath:      marriageDocument.AktaFilePath,
+			KtpSaksiFilePath:  marriageDocument.KtpSaksiFilePath,
+			RtRw:              marriageDocument.User.RwList.NameRw,
+		})
+	}
+}
+
+func MarriageDocumentForUserResponses(marriageDocumentsResponses *[]model.AllMailItemForUserResponse, marriageDocuments *[]entity.MarriageStatementDocument) {
+	for _, marriageDocument := range *marriageDocuments {
+		*marriageDocumentsResponses = append(*marriageDocumentsResponses, model.AllMailItemForUserResponse{
+			ID:                marriageDocument.ID,
+			StatementTypeItem: marriageDocument.StatementTypeItem.Name,
+			StatementType:     marriageDocument.StatementTypeItem.StatementType.Name,
+			Date:              marriageDocument.CreatedAt.Format("2006-01-02"),
+			RW:                marriageDocument.User.RwList.NameRw,
+			Status:            marriageDocument.Status,
+			SuratBalasan:      marriageDocument.SuratBalasanFilePath,
+		})
+	}
+}

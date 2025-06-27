@@ -31,6 +31,7 @@ type BirthCertificateDocumentWithUserResponse struct {
 	KtpSaksi2FilePath      string `json:"ktp_saksi_2_file_path" validate:"required"`
 	KtpOrangTuaFilePath    string `json:"ktp_orang_tua_file_path" validate:"required"`
 	SuratBalasan           string `json:"surat_balasan_file_path" validate:"required"`
+	RtRw                   string `json:"rt_rw" validate:"required"`
 }
 
 type BirthCertificateDocumentRequest struct {

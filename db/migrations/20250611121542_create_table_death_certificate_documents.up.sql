@@ -11,7 +11,7 @@ CREATE TABLE death_certificate_documents (
   ktp_saksi1_file_path VARCHAR(100) NOT NULL UNIQUE,
   ktp_saksi2_file_path VARCHAR(100) NOT NULL UNIQUE,
   buku_nikah_file_path VARCHAR(100) NOT NULL UNIQUE,
-  surat_balasan_file_path VARCHAR(255) UNIQUE,
+  surat_balasan_file_path VARCHAR(255),
   status ENUM("belum", "selesai") NOT NULL DEFAULT "belum",
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

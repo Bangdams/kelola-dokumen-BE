@@ -19,6 +19,17 @@ type MailWithUserResponse struct {
 	KkFilePath        string `json:"kk_file_path" validate:"required"`
 	RtRwFilePath      string `json:"rt_rw_file_path" validate:"required"`
 	SuratBalasan      string `json:"surat_balasan_file_path" validate:"required"`
+	RtRw              string `json:"rt_rw" validate:"required"`
+}
+
+type AllMailItemForUserResponse struct {
+	ID                uint   `json:"id" validate:"required"`
+	StatementTypeItem string `json:"statement_type_item" validate:"required"`
+	StatementType     string `json:"statement_type" validate:"required"`
+	Date              string `json:"date" validate:"required"`
+	RW                string `json:"rw" validate:"required"`
+	Status            string `json:"status" validate:"required"`
+	SuratBalasan      string `json:"surat_balasan_file_path" validate:"required"`
 }
 
 type MailRequest struct {

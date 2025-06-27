@@ -143,6 +143,7 @@ func (birthDocumentUsecase *BirthCertificateDocumentUsecaseImpl) Create(ctx cont
 		KtpSaksi1FilePath:      request.KtpSaksi1FilePath,
 		KtpSaksi2FilePath:      request.KtpSaksi2FilePath,
 		KtpOrangTuaFilePath:    request.KtpOrangTuaFilePath,
+		Status:                 "ditunggu",
 	}
 
 	err = birthDocumentUsecase.BirthCertificateDocumentRepo.Create(tx, birthDocument)

@@ -80,6 +80,7 @@ func (controller *BirthCertificateDocumentControllerImpl) Update(ctx *fiber.Ctx)
 // Create implements BirthCertificateDocumentController.
 func (controller *BirthCertificateDocumentControllerImpl) Create(ctx *fiber.Ctx) error {
 	request := new(model.BirthCertificateDocumentRequest)
+	log.Println("ada")
 	if err := ctx.BodyParser(request); err != nil {
 		log.Println("failed to parse request:", err)
 		return fiber.ErrBadRequest

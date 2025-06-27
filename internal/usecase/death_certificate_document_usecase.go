@@ -143,6 +143,7 @@ func (deathDocumentUsecase *DeathCertificateDocumentUsecaseImpl) Create(ctx cont
 		KtpSaksi1FilePath:     request.KtpSaksi1FilePath,
 		KtpSaksi2FilePath:     request.KtpSaksi2FilePath,
 		BukuNikahFilePath:     request.BukuNikahFilePath,
+		Status:                "ditunggu",
 	}
 
 	err = deathDocumentUsecase.DeathCertificateDocumentRepo.Create(tx, deathDocument)

@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/Bangdams/kelola-dokumen-BE/internal/entity"
@@ -40,7 +39,7 @@ func (repository *UserRepositoryImpl) DashboardAdmin(tx *gorm.DB, totalCompleted
 
 	for _, table := range tables {
 		var count int64
-		err := tx.Table(table).Where("status = ?", "belum").Count(&count).Error
+		err := tx.Table(table).Where("status = ?", "ditunggu").Count(&count).Error
 		if err != nil {
 			log.Fatal(err)
 			return err
@@ -64,9 +63,6 @@ func (repository *UserRepositoryImpl) DashboardAdmin(tx *gorm.DB, totalCompleted
 	for _, count := range countsCompletes {
 		*totalCompleted += count
 	}
-
-	fmt.Println("Total dokumen yang selesai:", totalCompleted)
-	fmt.Println("Total dokumen yang belum selesai:", totalIncomplete)
 
 	return nil
 }

@@ -24,6 +24,7 @@ type MailUsecase interface {
 	FindAll(ctx context.Context) (*[]model.MailResponse, error)
 	FindAllIncompliteMail(ctx context.Context) (*model.AllMailResponse, error)
 	FindAllCompliteMail(ctx context.Context) (*model.AllMailResponse, error)
+	FindAllMailForUser(ctx context.Context, userId uint) (*[]model.AllMailItemForUserResponse, error)
 }
 
 type MailUsecaseImpl struct {
@@ -40,6 +41,28 @@ func NewMailUsecase(statementTypeItemRepo repository.StatementTypeItemRepository
 		DB:                    DB,
 		Validate:              validate,
 	}
+}
+
+// FindAllMailForUser implements MailUsecase.
+func (mailUsecase *MailUsecaseImpl) FindAllMailForUser(ctx context.Context, userId uint) (*[]model.AllMailItemForUserResponse, error) {
+	tx := mailUsecase.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	var response []model.AllMailItemForUserResponse
+	err := mailUsecase.MailRepo.FindAllMailForUser(tx, &response, userId)
+	if err != nil {
+		log.Println("Failed to find : ", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		log.Println("Failed commit transaction : ", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	log.Println("success find from usecase mail")
+
+	return &response, nil
 }
 
 // FindAllCompliteMail implements MailUsecase.
@@ -205,6 +228,7 @@ func (mailUsecase *MailUsecaseImpl) Create(ctx context.Context, request *model.M
 		KtpFilePath:         request.KtpFilePath,
 		KkFilePath:          request.KkFilePath,
 		RtRwFilePath:        request.RtRwFilePath,
+		Status:              "ditunggu",
 	}
 
 	err = mailUsecase.MailRepo.Create(tx, mail)

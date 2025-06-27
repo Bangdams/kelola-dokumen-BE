@@ -24,8 +24,6 @@ type RouteConfig struct {
 
 func (config *RouteConfig) Setup() {
 	// API ADMIN
-	// config.App.Post("/users", config.UserController.Create)
-
 	admin := config.App.Group("/api-admin", util.CheckLevel("admin"))
 
 	// API for dashboard admin
@@ -87,10 +85,26 @@ func (config *RouteConfig) Setup() {
 	// API USER
 	user := config.App.Group("/api-user", util.CheckLevel("user"))
 
+	// API for statement types
+	user.Get("/statement-type-items/:statementTypeId/statementType", config.StatementTypeItemController.FindAll)
+	user.Get("/statement-types", config.StatementTypeController.FindAll)
+
+	// API for mail
 	user.Get("/mails", config.MailController.FindAll)
 	user.Get("/mails/:mailId", config.MailController.FindId)
 	user.Post("/mails", config.MailController.Create)
 	user.Delete("/mails/:mailId", config.MailController.Delete)
+
+	user.Get("/all-mail", config.MailController.FindAllMailForUser)
+
+	// API for marriage statement document
+	user.Post("/mails/marriage-statement-document", config.MarriageStatementDocumentController.Create)
+
+	// API for death certificate document
+	user.Post("/mails/death-certificate-document", config.DeathCertificateDocumentController.Create)
+
+	// API for birth certificate document
+	user.Post("/mails/birth-certificate-document", config.BirthCertificateDocumentController.Create)
 
 	// API for pdf
 	config.App.Get("/api/download/:filename", func(ctx *fiber.Ctx) error {

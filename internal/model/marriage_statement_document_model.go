@@ -23,6 +23,7 @@ type MarriageStatementDocumentWithUserResponse struct {
 	AktaFilePath      string `json:"akta_file_path" validate:"required"`
 	KtpSaksiFilePath  string `json:"ktp_saksi_file_path" validate:"required"`
 	SuratBalasan      string `json:"surat_balasan_file_path" validate:"required"`
+	RtRw              string `json:"rt_rw" validate:"required"`
 }
 
 type MarriageStatementDocumentRequest struct {
